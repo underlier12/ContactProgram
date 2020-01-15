@@ -1,13 +1,13 @@
-package edu.java.contact01;
+package edu.java.contact02;
 
-public class Contact {
+public class ContactVO {
 	private String name;
 	private String phone;
 	private String email;
 	
-	public Contact() {}
+	public ContactVO() {}
 	
-	public Contact(String name, String phone, String email) {
+	public ContactVO(String name, String phone, String email) {
 		this.name = name;
 		this.phone = phone;
 		this.email = email;
@@ -37,4 +37,11 @@ public class Contact {
 		this.email = email;
 	}
 	
+	@Override
+	public String toString() {
+		String str = " 이름       : " + name + "\n"
+				   + " 전화번호 : " + phone + "\n"
+				   + " 이메일    : " + email;
+		return str;
+	}
 }
