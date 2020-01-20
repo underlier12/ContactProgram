@@ -1,4 +1,6 @@
-package edu.java.contact02;
+package edu.java.contact03;
+
+import java.util.ArrayList;
 
 public class ContactDAOImple implements ContactDAO{
 	
@@ -14,36 +16,38 @@ public class ContactDAOImple implements ContactDAO{
 		return instance;
 	}
 	// =============================================
+
+	private ArrayList<ContactVO> list = new ArrayList<>();
 	
-	public static final int MAX = 100;
-	private ContactVO[] list = new ContactVO[MAX];
-	private int count;
-	
-	public int getCount() {
-		return count;
+	public int getSize() {
+		return list.size();
 	}
 	
 	@Override
 	public int insert(ContactVO vo) {
-		list[count] = vo;
-		count++;
+		list.add(vo);
 		return 1;
 	}
 
 	@Override
-	public ContactVO[] search() {
+	public ArrayList<ContactVO> search() {
 		return list;
 	}
 	
 	@Override
 	public ContactVO search(int index) {
-		return list[index];
+		return list.get(index);
 	}
 
 	@Override
 	public int modify(int index, ContactVO vo) {
-		list[index].setEmail(vo.getEmail());
-		list[index].setPhone(vo.getPhone());
+		list.set(index, vo);
+		return 1;
+	}
+
+	@Override
+	public int delete(int index) {
+		list.remove(index);
 		return 1;
 	}
 	
