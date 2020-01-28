@@ -1,6 +1,8 @@
-package edu.java.contact02;
+package edu.java.contact04;
 
-public class ContactVO {
+import java.io.Serializable;
+
+public class ContactVO implements Serializable{
 	private String name;
 	private String phone;
 	private String email;

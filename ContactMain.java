@@ -1,9 +1,10 @@
-package edu.java.contact03;
+package edu.java.contact04;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ContactMain {
+	private static final int VERSION = 4;
 
 	private static Scanner sc;
 	private static ContactDAO dao;
@@ -51,7 +52,7 @@ public class ContactMain {
 	}
 
 	private static void version() {
-		System.out.printf("연락처 version %.1f", Menu.VERSION * 0.1, "\n");
+		System.out.printf("연락처 version %.1f", VERSION * 0.1, "\n");
 		System.out.println();
 	}
 
