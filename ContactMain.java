@@ -1,204 +1,319 @@
-package edu.java.contact04;
+package edu.java.contact05;
 
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import javax.swing.JScrollPane;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Scanner;
+
+import javax.swing.SwingConstants;
+
+import javax.swing.JTextArea;
 
 public class ContactMain {
-	private static final int VERSION = 4;
-
-	private static Scanner sc;
-	private static ContactDAO dao;
-	private static boolean run = true;
-	private static int size;
 	
+	private static ContactDAO dao;
+	private static int size;
+
+	private JFrame frame;
+	private JTextField txtName;
+	private JTextField txtSearch;
+	private JTextField txtPhone;
+	private JTextField txtEmail;
+	
+	private JTextArea txtAreaSearch;
+	private JTextArea txtAreaResult;
+	private JTextField txtIndex;
+
+	/**
+	 * Launch the application.
+	 */
 	public static void main(String[] args) {
-		version();
-		sc = new Scanner(System.in);
 		dao = ContactDAOImple.getInstance();
 		
-		int choice = 0;
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					ContactMain window = new ContactMain();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public ContactMain() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 1000, 653);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().setLayout(null);
 		
-		while(run) {
-			showMenu();
-			choice = askChoice();
-			size = ((ContactDAOImple)dao).getSize();
+		JLabel lblConPro = new JLabel("Contact Program");
+		lblConPro.setHorizontalAlignment(SwingConstants.CENTER);
+		lblConPro.setFont(new Font("굴림", Font.PLAIN, 30));
+		lblConPro.setBounds(268, 10, 415, 48);
+		frame.getContentPane().add(lblConPro);
+		
+		JLabel lblConManage = new JLabel("연락처 관리");
+		lblConManage.setFont(new Font("굴림", Font.PLAIN, 24));
+		lblConManage.setHorizontalAlignment(SwingConstants.CENTER);
+		lblConManage.setBounds(89, 59, 197, 33);
+		frame.getContentPane().add(lblConManage);
+
+		
+		JLabel lblName = new JLabel("성      명");
+		lblName.setHorizontalAlignment(SwingConstants.CENTER);
+		lblName.setFont(new Font("굴림", Font.PLAIN, 18));
+		lblName.setBounds(42, 102, 108, 36);
+		frame.getContentPane().add(lblName);
+		
+		JLabel lblPhone = new JLabel("전화번호");
+		lblPhone.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPhone.setFont(new Font("굴림", Font.PLAIN, 18));
+		lblPhone.setBounds(42, 148, 108, 36);
+		frame.getContentPane().add(lblPhone);
+		
+		JLabel lblEmail = new JLabel("이 메 일");
+		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
+		lblEmail.setFont(new Font("굴림", Font.PLAIN, 18));
+		lblEmail.setBounds(42, 194, 108, 36);
+		frame.getContentPane().add(lblEmail);
+		
+		txtName = new JTextField();
+		txtName.setBounds(180, 102, 255, 36);
+		frame.getContentPane().add(txtName);
+		txtName.setColumns(10);
+		
+		txtPhone = new JTextField();
+		txtPhone.setColumns(10);
+		txtPhone.setBounds(180, 148, 255, 36);
+		frame.getContentPane().add(txtPhone);
+		
+		txtEmail = new JTextField();
+		txtEmail.setColumns(10);
+		txtEmail.setBounds(180, 196, 255, 36);
+		frame.getContentPane().add(txtEmail);		
+		
+		JButton btnRegister = new JButton("등      록");
+		ActionListener il = new InsertListener();
+		btnRegister.addActionListener(il);
+		btnRegister.setFont(new Font("굴림", Font.PLAIN, 18));
+		btnRegister.setBounds(42, 240, 393, 42);
+		frame.getContentPane().add(btnRegister);
+		
+		JLabel lblIndex = new JLabel("수정/삭제할 인덱스");
+		lblIndex.setHorizontalAlignment(SwingConstants.CENTER);
+		lblIndex.setFont(new Font("굴림", Font.PLAIN, 18));
+		lblIndex.setBounds(42, 292, 197, 36);
+		frame.getContentPane().add(lblIndex);
+		
+		txtIndex = new JTextField();
+		txtIndex.setColumns(10);
+		txtIndex.setBounds(250, 293, 185, 36);
+		frame.getContentPane().add(txtIndex);
+		
+		JButton btnModify = new JButton("수      정");
+		ActionListener ml = new ModifyListener();
+		btnModify.addActionListener(ml);
+		btnModify.setFont(new Font("굴림", Font.PLAIN, 18));
+		btnModify.setBounds(42, 339, 197, 42);
+		frame.getContentPane().add(btnModify);
+		
+		JButton btnDelete = new JButton("삭      제");
+		ActionListener dl = new DeleteListener();
+		btnDelete.addActionListener(dl);
+		btnDelete.setFont(new Font("굴림", Font.PLAIN, 18));
+		btnDelete.setBounds(250, 339, 185, 42);
+		frame.getContentPane().add(btnDelete);
+		
+		JLabel lblResult = new JLabel("실 행 결 과");
+		lblResult.setHorizontalAlignment(SwingConstants.CENTER);
+		lblResult.setFont(new Font("굴림", Font.PLAIN, 14));
+		lblResult.setBounds(26, 391, 108, 22);
+		frame.getContentPane().add(lblResult);
+		
+		JScrollPane sclPaneResult = new JScrollPane();
+		sclPaneResult.setBounds(42, 423, 393, 182);
+		frame.getContentPane().add(sclPaneResult);
+		
+		txtAreaResult = new JTextArea();
+		sclPaneResult.setViewportView(txtAreaResult);
+		
+		JLabel lblConSearch = new JLabel("연락처 검색");
+		lblConSearch.setFont(new Font("굴림", Font.PLAIN, 24));
+		lblConSearch.setHorizontalAlignment(SwingConstants.CENTER);
+		lblConSearch.setBounds(629, 59, 175, 33);
+		frame.getContentPane().add(lblConSearch);
+		
+		txtSearch = new JTextField();
+		txtSearch.setBounds(500, 102, 253, 33);
+		frame.getContentPane().add(txtSearch);
+		txtSearch.setColumns(10);
+		
+		JButton btnSearch = new JButton("검      색");
+		ActionListener sl = new SearchListener();
+		btnSearch.addActionListener(sl);
+		btnSearch.setBounds(788, 102, 147, 36);
+		frame.getContentPane().add(btnSearch);
+		
+		JScrollPane sclPaneSearch = new JScrollPane();
+		sclPaneSearch.setBounds(500, 160, 435, 445);
+		frame.getContentPane().add(sclPaneSearch);
+		
+		txtAreaSearch = new JTextArea();
+		sclPaneSearch.setViewportView(txtAreaSearch);
+	}
+	
+	class InsertListener implements ActionListener{
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			txtAreaResult.append("연락처 정보 등록\n");
+			String name = txtName.getText();
+			String phone = txtPhone.getText();
+			String email = txtEmail.getText();
 			
-			switch (choice) {
-			case Menu.MENU_QUIT:
-				quit();
-				break;
-			case Menu.MENU_INSERT:
-				insertContact();
-				break;
-			case Menu.MENU_TOTAL_SEARCH:
-				totalSearch();
-				break;
-			case Menu.MENU_DETAIL_SEARCH:
-				detailSearch();
-				break;
-			case Menu.MENU_MODIFY:
-				modifyContact();
-				break;
-			case Menu.MENU_DELETE:
-				deleteContact();
-				break;
-			default:
-				plzRechoice();
-				break;
+			ContactVO vo = new ContactVO(name, phone, email);
+			int result = dao.insert(vo);
+			if(result == 1) {
+				txtAreaResult.append("연락처 등록 성공\n");
+			} else {
+				txtAreaResult.append("연락처 등록 실패\n");
+			}			
+		}
+	}
+	
+	class SearchListener implements ActionListener{
+		@Override
+		public void actionPerformed(ActionEvent e) {			
+			size = ((ContactDAOImple)dao).getSize();
+			if (size == 0) {
+				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+				return;
 			}
 			
-		}
-		
-	}
+			if(txtSearch.getText().equals("")) {
+				txtAreaResult.append("Total search\n");
+				
+				ArrayList<ContactVO> list = dao.search();
+				for (int i = 0; i < size; i++) {
+					txtAreaSearch.append(list.get(i).toString());	
+					txtAreaSearch.append("\n\n");
+				}
+				
+			} else {
+				txtAreaResult.append("Detail search\n");
+				
+				String index = txtSearch.getText();
+				try {
+					int idx = Integer.parseInt(index);
+					
+					if (!(idx >= 0 && idx < size)) {
+						txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
+						return;
+					}
+					
+					ContactVO vo = dao.search(idx);					
+					txtAreaSearch.append(vo.toString());
+					txtAreaSearch.append("\n\n");
 
-	private static void version() {
-		System.out.printf("연락처 version %.1f", VERSION * 0.1, "\n");
-		System.out.println();
-	}
-
-	private static void showMenu() {
-		System.out.println("=======================================================");
-		System.out.println("  1. 등록 | 2. 전체검색 | 3. 상세검색 | 4. 수정 | 5. 삭제 | 0. 종료 ");
-		System.out.println("=======================================================");
-		System.out.println("메뉴 선택 > ");
-	}
-	
-	private static int askChoice() {
-		String str = sc.nextLine();
-		
-		try {
-			int parsedInt = Integer.parseInt(str);
-			return parsedInt;
-		} catch (Exception e){
-			return 9;
-		}
-	}
-
-	private static void quit() {
-		run = false;
-		System.out.println("프로그램이 종료됩니다.");
-	}
-
-	private static void insertContact() {
-		System.out.println("============= 연락처 정보 등록 =============");
-		System.out.println(" 이름 입력 > ");
-		String name = sc.nextLine();
-		System.out.println(" 전화번호 입력 > ");
-		String phone = sc.nextLine();
-		System.out.println(" 이메일 입력 > ");
-		String email = sc.nextLine();
-		System.out.println("======================================");
-		
-		// 입력받은 데이터로 ContactVO 클래스의 인스턴스 생성
-		ContactVO vo = new ContactVO(name, phone, email);
-		int result = dao.insert(vo);
-		if(result == 1) {
-			System.out.println("연락처 등록 성공");
-		} else {
-			System.out.println("연락처 등록 실패");
-		}
-		System.out.println();
-	}
-
-	private static void totalSearch() {	
-		if (size == 0) {
-			System.out.println(" ============= 연락처 등록을 먼저 해주세요  ============= ");
-			return;
-		}
-
-		ArrayList<ContactVO> list = dao.search();
-		for (int i = 0; i < size; i++) {
-			System.out.println("============= 연락처 정보 [" + i + "] =============");
-			System.out.println(list.get(i));
-			System.out.println("=======================================");
-			System.out.println();
-		}
-	}
-
-	private static void detailSearch() {
-		if (size == 0) {
-			System.out.println(" ============= 연락처 등록을 먼저 해주세요  ============= ");
-			return;
-		}
-		
-		System.out.println(" 검색할 연락처의 인덱스를 입력 > ");
-		int index = sc.nextInt();
-		sc.nextLine();
-		
-		if (!(index >= 0 && index < size)) {
-			System.out.println("올바르지 않은 인덱스입니다.");
-			return;
-		} 
-		ContactVO vo = dao.search(index);
-		System.out.println("============= 연락처 정보 [" + index + "] =============");
-		System.out.println(vo);
-		System.out.println("=======================================");
-		System.out.println();
-	}
-
-	private static void modifyContact() {
-		if (size == 0) {
-			System.out.println(" ============= 연락처 등록을 먼저 해주세요  ============= ");
-			return;
-		}
-		
-		System.out.println(" 수정할 연락처의 인덱스를 입력 > ");
-		int index = sc.nextInt();
-		sc.nextLine();
-		
-		if (!(index >= 0 && index < size)) {
-			System.out.println("올바르지 않은 인덱스입니다.");
-			return;
-		} 
-		System.out.println("============= 연락처 정보 수정 =============");
-		System.out.println(" 이름 입력 > ");
-		String name = sc.nextLine();
-		System.out.println(" 전화번호 입력 > ");
-		String phone = sc.nextLine();
-		System.out.println(" 이메일 입력 > ");
-		String email = sc.nextLine();
-		System.out.println("======================================");
-		
-		ContactVO vo = new ContactVO(name, phone, email);
-		
-		int result = ((ContactDAOImple)dao).modify(index, vo);
-		if (result == 1) {
-			System.out.println("연락처 수정 성공");
-			System.out.println();
-		} else {
-			System.out.println("연락처 수정 실패");
-			System.out.println();
-		}
+				} catch (Exception e2) {
+					System.out.println(e2);
+				}
+			}
+		}		
 	}
 	
-
-	private static void deleteContact() {
-		if (size == 0) {
-			System.out.println(" ============= 연락처 등록을 먼저 해주세요  ============= ");
-			return;
-		}
-		
-		System.out.println(" 삭제할 연락처의 인덱스를 입력 > ");
-		int index = sc.nextInt();
-		sc.nextLine();
-		
-		if(!(index >= 0 && index < size)) {
-			System.out.println("올바르지 않은 인덱스입니다.");
-			return;
-		} 
-		
-		int result = ((ContactDAOImple)dao).delete(index);
-		if (result == 1) {
-			System.out.println(" ============= 연락처 [" + index + "] 삭제 성공  ============= ");
-		} else {
-			System.out.println(" ============= 연락처 [" + index + "] 삭제 실패  ============= ");
-		}
+	class ModifyListener implements ActionListener{
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			txtAreaResult.append(txtIndex.getText());
+			
+			size = ((ContactDAOImple)dao).getSize();
+			if (size == 0) {
+				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+				return;
+			}
+			
+			String index = txtIndex.getText();
+			try {
+				int idx = Integer.parseInt(index);
+				
+				if (!(idx >= 0 && idx < size)) {
+					txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
+					return;
+				}
+				
+				String name = txtName.getText();
+				String phone = txtPhone.getText();
+				String email = txtEmail.getText();
+				ContactVO vo = new ContactVO(name, phone, email);
+				
+				int result = ((ContactDAOImple)dao).modify(idx, vo);
+				if (result == 1) {
+					txtAreaResult.append("연락처 수정 성공\n");
+				} else {
+					txtAreaResult.append("연락처 수정 실패\n");
+				}
+				
+			} catch (Exception e2) {
+				System.out.println(e2);
+			}			
+		}		
 	}
+	
+	class DeleteListener implements ActionListener{
 
-
-	private static void plzRechoice() {
-		System.out.println("메뉴 선택을 다시 해주십시오.");
-		System.out.println();
-	}
-
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			size = ((ContactDAOImple)dao).getSize();
+			if (size == 0) {
+				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+				return;
+			}
+			
+			String index = txtIndex.getText();
+			try {
+				int idx = Integer.parseInt(index);
+				
+				if (!(idx >= 0 && idx < size)) {
+					txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
+					return;
+				}
+				
+				int result = ((ContactDAOImple)dao).delete(idx);
+				if (result == 1) {
+					txtAreaResult.append("연락처 [" + idx + "] 삭제 성공\n");
+				} else {
+					txtAreaResult.append("연락처 [" + idx + "] 삭제 실패\n");
+				}
+				
+			} catch (Exception e2) {
+				System.out.println(e2);
+			}			
+		}		
+	}	
 }
+
+
+
+
+
+
+
