@@ -7,13 +7,15 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 import javax.swing.SwingConstants;
-
+import javax.swing.table.DefaultTableModel;
 import javax.swing.JTextArea;
 
 public class ContactMain {
@@ -26,10 +28,13 @@ public class ContactMain {
 	private JTextField txtSearch;
 	private JTextField txtPhone;
 	private JTextField txtEmail;
-	
-	private JTextArea txtAreaSearch;
+	private JTextField txtIndex;	
 	private JTextArea txtAreaResult;
-	private JTextField txtIndex;
+	
+	private JTable table;
+	private String[] colNames = {"No", "이름", "전화번호", "이메일"};
+	private Object[] records = new Object[colNames.length];
+	private DefaultTableModel tableModel;
 
 	/**
 	 * Launch the application.
@@ -176,9 +181,14 @@ public class ContactMain {
 		JScrollPane sclPaneSearch = new JScrollPane();
 		sclPaneSearch.setBounds(500, 160, 435, 445);
 		frame.getContentPane().add(sclPaneSearch);
+	
+		tableModel = new DefaultTableModel(colNames, 0);
+		table = new JTable(tableModel);
+		table.setFont(new Font("굴림", Font.PLAIN, 15));
+		sclPaneSearch.setViewportView(table);
 		
-		txtAreaSearch = new JTextArea();
-		sclPaneSearch.setViewportView(txtAreaSearch);
+//		txtAreaSearch = new JTextArea();
+//		sclPaneSearch.setViewportView(txtAreaSearch);
 	}
 	
 	class InsertListener implements ActionListener{
@@ -188,6 +198,11 @@ public class ContactMain {
 			String name = txtName.getText();
 			String phone = txtPhone.getText();
 			String email = txtEmail.getText();
+			
+			if(name.equals("") || phone.equals("") || email.equals("")) {
+				txtAreaResult.append("정보 중 하나라도 비어있으면 안됩니다.\n");
+				return;
+			}
 			
 			ContactVO vo = new ContactVO(name, phone, email);
 			int result = dao.insert(vo);
@@ -210,11 +225,15 @@ public class ContactMain {
 			
 			if(txtSearch.getText().equals("")) {
 				txtAreaResult.append("Total search\n");
+				tableModel.setNumRows(0);
 				
 				ArrayList<ContactVO> list = dao.search();
 				for (int i = 0; i < size; i++) {
-					txtAreaSearch.append(list.get(i).toString());	
-					txtAreaSearch.append("\n\n");
+					records[0] = i;
+					records[1] = list.get(i).getName();
+					records[2] = list.get(i).getPhone();
+					records[3] = list.get(i).getEmail();
+					tableModel.addRow(records);
 				}
 				
 			} else {
@@ -228,10 +247,14 @@ public class ContactMain {
 						txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
 						return;
 					}
+					tableModel.setNumRows(0);
 					
 					ContactVO vo = dao.search(idx);					
-					txtAreaSearch.append(vo.toString());
-					txtAreaSearch.append("\n\n");
+					records[0] = idx;
+					records[1] = vo.getName();
+					records[2] = vo.getPhone();
+					records[3] = vo.getEmail();
+					tableModel.addRow(records);
 
 				} catch (Exception e2) {
 					System.out.println(e2);
@@ -263,6 +286,12 @@ public class ContactMain {
 				String name = txtName.getText();
 				String phone = txtPhone.getText();
 				String email = txtEmail.getText();
+				
+				if(name.equals("") || phone.equals("") || email.equals("")) {
+					txtAreaResult.append("정보 중 하나라도 비어있으면 안됩니다.\n");
+					return;
+				}
+				
 				ContactVO vo = new ContactVO(name, phone, email);
 				
 				int result = ((ContactDAOImple)dao).modify(idx, vo);
