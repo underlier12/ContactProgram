@@ -1,28 +1,26 @@
-package edu.java.contact04;
+package edu.java.contact06;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class ContactDAOImple implements ContactDAO{
+import oracle.jdbc.OracleDriver;
+
+public class ContactDAOImple implements ContactDAO , OracleQuery{
 	
 	// ========Singleton Pattern====================
 	private static ContactDAOImple instance = null;
 	
 	private ContactDAOImple() {
-		// 데이터 변경 사항 저장을 위해 ContactDAOImple 
-		// 생성자를 불러오면 폴더 경로와 파일을 생성
-		initDataDir();
-		initDataFile();
+		try {
+			DriverManager.registerDriver(new OracleDriver());
+			System.out.println("드라이버 로드 성공");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static ContactDAOImple getInstance() {
@@ -33,126 +31,198 @@ public class ContactDAOImple implements ContactDAO{
 	}
 	// =============================================
 	
-	// list 사용 전 인스턴스 생성
-	public ArrayList<ContactVO> list; 
-	
-	// 데이터를 저장할 폴더와 파일 이름 정의
-	private static final String DATA_DIR = "data";
-	private static final String DATA_FILE = "contact.data";
-	
-	// 데이터 폴더와 파일을 사용하는 File 객체 선언
-	private File dataDir;
-	private File dataFile;
+	Connection conn = null;
+	PreparedStatement pstmt = null;
+	ResultSet rs = null;
 	
 	public int getSize() {
-		return list.size();
-	}
-	
-	// 데이터 폴더가 있는지 검사, 없으면 생성
-	private void initDataDir() {
-		dataDir = new File(DATA_DIR);
-		
-		if(!dataDir.exists()) {
-			System.out.println("해당 디렉토리 없음");
-			if(dataDir.mkdir()) {
-				System.out.println("디렉토리 생성 성공");
-			}
-		} else {
-			System.out.println("해당 디렉토리 존재");
-		}
-		System.out.println();
-	}
-	
-	// 데이터 파일 검사, 없으면 ArraryList 인스턴스 생성/ 있으면 데이터를 읽어 ArrayList 채움
-	private void initDataFile() {
-		String filePath = DATA_DIR + File.separator + DATA_FILE;
-		dataFile = new File(filePath);
-		System.out.println("파일 경로 : " + dataFile.getPath());
-		
-		if(!dataFile.exists()) {
-			list = new ArrayList<ContactVO>();
-			System.out.println("데이터 파일 없음, ArrayList 생성");
-		} else {
-			readDataFromFile();
-			System.out.println("데이터 파일 있음, 불러오기 성공");
-		}
-		System.out.println();
-	}
-	
-	// 파일로 부터 데이터 읽기
-	private void readDataFromFile() {
-		InputStream in = null;
-		BufferedInputStream bin = null;
-		ObjectInputStream oin = null;
-		
+		int size = 0;
 		try {
-			in = new FileInputStream(dataFile);
-			bin = new BufferedInputStream(in);
-			oin = new ObjectInputStream(bin);
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
 			
-			list = (ArrayList<ContactVO>) oin.readObject();
-		} catch (Exception e) {
+			pstmt = conn.prepareStatement(SQL_ORDER_BY_CID);
+			rs = pstmt.executeQuery();
+			
+			while(rs.next()) {
+				size++;
+			}
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
-				oin.close();
-			} catch (Exception e) {
-				e.printStackTrace();			}
-		}
-	}
-	
-	// 파일에 데이터 쓰기
-	private void writeDataToFile() {
-		OutputStream out = null;
-		BufferedOutputStream bout = null;
-		ObjectOutputStream oout = null;
-		
-		try {
-			out = new FileOutputStream(dataFile);
-			bout = new BufferedOutputStream(out);
-			oout = new ObjectOutputStream(bout);		
-
-			oout.writeObject(list);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				oout.close();
-			} catch (IOException e) {
+				rs.close();
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
+		
+		return size;
 	}
 	
 	@Override
 	public int insert(ContactVO vo) {
-		list.add(vo);
-		writeDataToFile();
-		return 1;
+		// DB에 데이터(vo) 저장
+		int result = 0;
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
+			
+			pstmt = conn.prepareStatement(SQL_INSERT);
+			pstmt.setString(1, vo.getName());
+			pstmt.setString(2, vo.getPhone());
+			pstmt.setString(3, vo.getEmail());
+			
+			result = pstmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return result;
 	}
 
 	@Override
 	public ArrayList<ContactVO> search() {
+		// DB에서 연락처 전체 데이터 가져오기
+		ArrayList<ContactVO> list = new ArrayList<ContactVO>();
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
+			
+			pstmt = conn.prepareStatement(SQL_ORDER_BY_CID);
+			rs = pstmt.executeQuery();
+			
+			while(rs.next()) {
+				String name = rs.getString(COL_NAME);
+				String phone = rs.getString(COL_PHONE);
+				String email = rs.getString(COL_EMAIL);
+				
+				ContactVO vo = new ContactVO(name, phone, email);
+				list.add(vo);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		return list;
 	}
 	
 	@Override
 	public ContactVO search(int index) {
-		return list.get(index);
+		// index 번호(cid)로 데이터 검색 결과 리턴(vo)
+		ContactVO vo = null;
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
+			
+			pstmt = conn.prepareStatement(SQL_SELECT_BY_CID);
+			pstmt.setInt(1, index);
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				String name = rs.getString(COL_NAME);
+				String phone = rs.getString(COL_PHONE);
+				String email = rs.getString(COL_EMAIL);
+				
+				vo = new ContactVO(name, phone, email);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return vo;
 	}
 
 	@Override
 	public int modify(int index, ContactVO vo) {
-		list.set(index, vo);
-		writeDataToFile();
-		return 1;
+		// index 번호(cid)로 검색한 위치에 데이터(vo) 업데이트
+		int result = 0;
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
+			
+			pstmt = conn.prepareStatement(SQL_UPDATE);
+			pstmt.setString(1, vo.getName());
+			pstmt.setString(2, vo.getPhone());
+			pstmt.setString(3, vo.getEmail());
+			pstmt.setInt(4, index);
+			
+			result = pstmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return result;
 	}
 
 	@Override
 	public int delete(int index) {
-		list.remove(index);
-		writeDataToFile();
-		return 1;
+		// index(cid)로 데이터 삭제
+		int result = 0;
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			System.out.println("DB 연결 성공");
+			
+			pstmt = conn.prepareStatement(SQL_DELETE);
+			pstmt.setInt(1, index);
+			
+			result = pstmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return result;
 	}
 	
 }

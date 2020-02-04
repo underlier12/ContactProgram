@@ -1,4 +1,4 @@
-package edu.java.contact05;
+package edu.java.contact06;
 
 import java.awt.EventQueue;
 
@@ -186,9 +186,6 @@ public class ContactMain {
 		table = new JTable(tableModel);
 		table.setFont(new Font("굴림", Font.PLAIN, 15));
 		sclPaneSearch.setViewportView(table);
-		
-//		txtAreaSearch = new JTextArea();
-//		sclPaneSearch.setViewportView(txtAreaSearch);
 	}
 	
 	class InsertListener implements ActionListener{
@@ -229,7 +226,7 @@ public class ContactMain {
 				
 				ArrayList<ContactVO> list = dao.search();
 				for (int i = 0; i < size; i++) {
-					records[0] = i;
+					records[0] = i + 1;
 					records[1] = list.get(i).getName();
 					records[2] = list.get(i).getPhone();
 					records[3] = list.get(i).getEmail();
@@ -243,7 +240,7 @@ public class ContactMain {
 				try {
 					int idx = Integer.parseInt(index);
 					
-					if (!(idx >= 0 && idx < size)) {
+					if (!(idx >= 1 && idx < size)) {
 						txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
 						return;
 					}
@@ -265,9 +262,7 @@ public class ContactMain {
 	
 	class ModifyListener implements ActionListener{
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			txtAreaResult.append(txtIndex.getText());
-			
+		public void actionPerformed(ActionEvent e) {			
 			size = ((ContactDAOImple)dao).getSize();
 			if (size == 0) {
 				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
@@ -278,7 +273,7 @@ public class ContactMain {
 			try {
 				int idx = Integer.parseInt(index);
 				
-				if (!(idx >= 0 && idx < size)) {
+				if (!(idx >= 1 && idx < size)) {
 					txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
 					return;
 				}
@@ -296,9 +291,9 @@ public class ContactMain {
 				
 				int result = ((ContactDAOImple)dao).modify(idx, vo);
 				if (result == 1) {
-					txtAreaResult.append("연락처 수정 성공\n");
+					txtAreaResult.append("연락처 [" + idx + "] 수정 성공\n");
 				} else {
-					txtAreaResult.append("연락처 수정 실패\n");
+					txtAreaResult.append("연락처 [" + idx + "] 수정 실패\n");
 				}
 				
 			} catch (Exception e2) {
