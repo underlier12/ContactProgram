@@ -117,8 +117,13 @@ public class ContactMain {
 		frame.getContentPane().add(txtEmail);		
 		
 		JButton btnRegister = new JButton("등      록");
-		ActionListener il = new InsertListener();
-		btnRegister.addActionListener(il);
+		btnRegister.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				insertContact();
+			}
+		});
 		btnRegister.setFont(new Font("굴림", Font.PLAIN, 18));
 		btnRegister.setBounds(42, 240, 393, 42);
 		frame.getContentPane().add(btnRegister);
@@ -135,15 +140,25 @@ public class ContactMain {
 		frame.getContentPane().add(txtIndex);
 		
 		JButton btnModify = new JButton("수      정");
-		ActionListener ml = new ModifyListener();
-		btnModify.addActionListener(ml);
+		btnModify.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				modifyContact();
+			}
+		});
 		btnModify.setFont(new Font("굴림", Font.PLAIN, 18));
 		btnModify.setBounds(42, 339, 197, 42);
 		frame.getContentPane().add(btnModify);
 		
 		JButton btnDelete = new JButton("삭      제");
-		ActionListener dl = new DeleteListener();
-		btnDelete.addActionListener(dl);
+		btnDelete.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deleteContact();
+			}
+		});
 		btnDelete.setFont(new Font("굴림", Font.PLAIN, 18));
 		btnDelete.setBounds(250, 339, 185, 42);
 		frame.getContentPane().add(btnDelete);
@@ -173,8 +188,13 @@ public class ContactMain {
 		txtSearch.setColumns(10);
 		
 		JButton btnSearch = new JButton("검      색");
-		ActionListener sl = new SearchListener();
-		btnSearch.addActionListener(sl);
+		btnSearch.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				searchContact();
+			}
+		});
 		btnSearch.setBounds(788, 102, 147, 36);
 		frame.getContentPane().add(btnSearch);
 		
@@ -188,10 +208,42 @@ public class ContactMain {
 		sclPaneSearch.setViewportView(table);
 	}
 	
-	class InsertListener implements ActionListener{
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			txtAreaResult.append("연락처 정보 등록\n");
+	protected void insertContact() {
+		txtAreaResult.append("연락처 정보 등록\n");
+		String name = txtName.getText();
+		String phone = txtPhone.getText();
+		String email = txtEmail.getText();
+		
+		if(name.equals("") || phone.equals("") || email.equals("")) {
+			txtAreaResult.append("정보 중 하나라도 비어있으면 안됩니다.\n");
+			return;
+		}
+		
+		ContactVO vo = new ContactVO(name, phone, email);
+		int result = dao.insert(vo);
+		if(result == 1) {
+			txtAreaResult.append("연락처 등록 성공\n");
+		} else {
+			txtAreaResult.append("연락처 등록 실패\n");
+		}	
+	}
+
+	protected void modifyContact() {
+		size = ((ContactDAOImple)dao).getSize();
+		if (size == 0) {
+			txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+			return;
+		}
+		
+		String index = txtIndex.getText();
+		try {
+			int idx = Integer.parseInt(index);
+			
+			if (!(idx >= 1 && idx < size)) {
+				txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
+				return;
+			}
+			
 			String name = txtName.getText();
 			String phone = txtPhone.getText();
 			String email = txtEmail.getText();
@@ -202,74 +254,71 @@ public class ContactMain {
 			}
 			
 			ContactVO vo = new ContactVO(name, phone, email);
-			int result = dao.insert(vo);
-			if(result == 1) {
-				txtAreaResult.append("연락처 등록 성공\n");
+			
+			int result = ((ContactDAOImple)dao).modify(idx, vo);
+			if (result == 1) {
+				txtAreaResult.append("연락처 [" + idx + "] 수정 성공\n");
 			} else {
-				txtAreaResult.append("연락처 등록 실패\n");
-			}			
+				txtAreaResult.append("연락처 [" + idx + "] 수정 실패\n");
+			}
+			
+		} catch (Exception e2) {
+			System.out.println(e2);
 		}
 	}
-	
-	class SearchListener implements ActionListener{
-		@Override
-		public void actionPerformed(ActionEvent e) {			
-			size = ((ContactDAOImple)dao).getSize();
-			if (size == 0) {
-				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
-				return;
-			}
-			
-			if(txtSearch.getText().equals("")) {
-				txtAreaResult.append("Total search\n");
-				tableModel.setNumRows(0);
-				
-				ArrayList<ContactVO> list = dao.search();
-				for (int i = 0; i < size; i++) {
-					records[0] = i + 1;
-					records[1] = list.get(i).getName();
-					records[2] = list.get(i).getPhone();
-					records[3] = list.get(i).getEmail();
-					tableModel.addRow(records);
-				}
-				
-			} else {
-				txtAreaResult.append("Detail search\n");
-				
-				String index = txtSearch.getText();
-				try {
-					int idx = Integer.parseInt(index);
-					
-					if (!(idx >= 1 && idx < size)) {
-						txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
-						return;
-					}
-					tableModel.setNumRows(0);
-					
-					ContactVO vo = dao.search(idx);					
-					records[0] = idx;
-					records[1] = vo.getName();
-					records[2] = vo.getPhone();
-					records[3] = vo.getEmail();
-					tableModel.addRow(records);
 
-				} catch (Exception e2) {
-					System.out.println(e2);
-				}
-			}
-		}		
-	}
-	
-	class ModifyListener implements ActionListener{
-		@Override
-		public void actionPerformed(ActionEvent e) {			
-			size = ((ContactDAOImple)dao).getSize();
-			if (size == 0) {
-				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+	protected void deleteContact() {
+		size = ((ContactDAOImple)dao).getSize();
+		if (size == 0) {
+			txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+			return;
+		}
+		
+		String index = txtIndex.getText();
+		try {
+			int idx = Integer.parseInt(index);
+			
+			if (!(idx >= 0 && idx < size)) {
+				txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
 				return;
 			}
 			
-			String index = txtIndex.getText();
+			int result = ((ContactDAOImple)dao).delete(idx);
+			if (result == 1) {
+				txtAreaResult.append("연락처 [" + idx + "] 삭제 성공\n");
+			} else {
+				txtAreaResult.append("연락처 [" + idx + "] 삭제 실패\n");
+			}
+			
+		} catch (Exception e2) {
+			System.out.println(e2);
+		}
+	}
+
+	protected void searchContact() {
+		size = ((ContactDAOImple)dao).getSize();
+		if (size == 0) {
+			txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
+			return;
+		}
+		
+		if(txtSearch.getText().equals("")) {
+			txtAreaResult.append("Total search\n");
+			tableModel.setNumRows(0);
+			
+			ArrayList<ContactVO> list = dao.search();
+			for (int i = 0; i < size; i++) {
+				records[0] = i + 1;
+				records[1] = list.get(i).getName();
+				records[2] = list.get(i).getPhone();
+				records[3] = list.get(i).getEmail();
+				tableModel.addRow(records);
+			}
+			
+		} else {
+			txtAreaResult.append("Detail search\n");
+			
+			String index = txtSearch.getText();
 			try {
 				int idx = Integer.parseInt(index);
 				
@@ -277,61 +326,19 @@ public class ContactMain {
 					txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
 					return;
 				}
+				tableModel.setNumRows(0);
 				
-				String name = txtName.getText();
-				String phone = txtPhone.getText();
-				String email = txtEmail.getText();
-				
-				if(name.equals("") || phone.equals("") || email.equals("")) {
-					txtAreaResult.append("정보 중 하나라도 비어있으면 안됩니다.\n");
-					return;
-				}
-				
-				ContactVO vo = new ContactVO(name, phone, email);
-				
-				int result = ((ContactDAOImple)dao).modify(idx, vo);
-				if (result == 1) {
-					txtAreaResult.append("연락처 [" + idx + "] 수정 성공\n");
-				} else {
-					txtAreaResult.append("연락처 [" + idx + "] 수정 실패\n");
-				}
-				
-			} catch (Exception e2) {
-				System.out.println(e2);
-			}			
-		}		
-	}
-	
-	class DeleteListener implements ActionListener{
+				ContactVO vo = dao.search(idx);					
+				records[0] = idx;
+				records[1] = vo.getName();
+				records[2] = vo.getPhone();
+				records[3] = vo.getEmail();
+				tableModel.addRow(records);
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			size = ((ContactDAOImple)dao).getSize();
-			if (size == 0) {
-				txtAreaResult.append("연락처 등록을 먼저 해주세요\n");
-				return;
-			}
-			
-			String index = txtIndex.getText();
-			try {
-				int idx = Integer.parseInt(index);
-				
-				if (!(idx >= 0 && idx < size)) {
-					txtAreaResult.append("올바르지 않은 인덱스입니다.\n");
-					return;
-				}
-				
-				int result = ((ContactDAOImple)dao).delete(idx);
-				if (result == 1) {
-					txtAreaResult.append("연락처 [" + idx + "] 삭제 성공\n");
-				} else {
-					txtAreaResult.append("연락처 [" + idx + "] 삭제 실패\n");
-				}
-				
 			} catch (Exception e2) {
 				System.out.println(e2);
-			}			
-		}		
+			}
+		}
 	}	
 }
 
